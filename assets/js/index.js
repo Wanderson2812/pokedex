@@ -66,8 +66,8 @@ function appendCardPokemon(objPokemon) {
     getInfoPokemon(objPokemon, $this);
 
     $this.find('figure.pokemon-image img').attr('src', objPokemon.image).attr('alt', objPokemon.name);
-    $this.find('.card-body-info .pokemon-name-number h1').text(objPokemon.name);
-    $this.find('.card-body-info .pokemon-name-number h2').text("#" + objPokemon.id);
+    $this.find('.pokemon-info-top .pokemon-name-number h1').text(objPokemon.name);
+    $this.find('.pokemon-info-top .pokemon-name-number h2').text("#" + objPokemon.id);
 }
 
 function getInfoPokemon(objPokemon, $this) {
@@ -130,11 +130,12 @@ function getInfoPokemon(objPokemon, $this) {
 
     //validation apply color background by type pokemon
     if (colorType.length > 1) {
+        debugger
         var colorTypeDuo = colorType.toString().replace(',', '-');
-        $this.css("background", "var(--bg-" + colorTypeDuo + ")");
+        $this.parents('body').css("background", "var(--bg-" + colorTypeDuo + ")");
     } else {
         var colorTypeMono = colorType.toString().replace(',', '-');
-        $this.css("background", "var(--bg-" + colorTypeMono + ")");
+        $this.parents('body').css("background", "var(--bg-" + colorTypeMono + ")");
     }
 }
 
@@ -225,23 +226,19 @@ function nextPreviousPokemon() {
 
 var appendPokemon =
     '<div class="card-body">\n\
-        <div class="card-body-info">\n\
-            <div class="pokemon-info-top">\n\
-                <figure class="pokemon-image">\n\
-                    <img/>\n\
-                </figure>\n\
-                <div class="pokemon-name-number">\n\
-                    <h1 class="pokemon-name"></h1>\n\
-                    <h2 class="pokemon-number"></h2>\n\
-                </div>\n\
-                <div class="pokemon-types">\n\
-                    <ul class="pokemon-type"></ul>\n\
-                </div>\n\
+        <div class="pokemon-info-top">\n\
+            <figure class="pokemon-image">\n\
+                <img/>\n\
+            </figure>\n\
+            <div class="pokemon-name-number">\n\
+                <h1 class="pokemon-name"></h1>\n\
+                <h2 class="pokemon-number"></h2>\n\
             </div>\n\
-            <div class="pokemon-info-base-stats">\n\
-                <div class="pokemon-stats-base">\n\
-                    <h1>Base Stats</h1>\n\
-                </div>\n\
+            <div class="pokemon-types">\n\
+                <ul class="pokemon-type"></ul>\n\
             </div>\n\
+        </div>\n\
+        <div class="pokemon-stats-base">\n\
+            <h1>Base Stats</h1>\n\
         </div>\n\
     </div>';
