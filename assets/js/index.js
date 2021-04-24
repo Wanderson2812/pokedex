@@ -156,23 +156,40 @@ function search() {
 
 function getVariantForm(obj) {
     var urlSpecie = obj.species.url;
+    var nameCurrent = obj.name;
+
     $.ajax({
         url: urlSpecie,
         success: function (req) {
             var variant = req.varieties;
-            appendVariantForm(variant);
+            getUrlVariantForm(variant, nameCurrent);
         }
     });
 }
 
-function appendVariantForm(variant) {
+function getUrlVariantForm(variant, nameCurrent) {
     var variantForm = variant;
+
     for (let prop in variantForm) {
-        if (!variantForm[prop].is_default) {
-            debugger
-            var variantType = variantForm[prop].pokemon.name.replace(/(^[a-z]+\-+)/g, '');
+        var typeVariant = variantForm[prop];
+        if (nameCurrent == typeVariant.pokemon.name) {
+            continue;
+        } else {
+            selectVariantForm(typeVariant);
         }
     }
+}
+
+function selectVariantForm(typeVariant) {
+    var nameVariant = typeVariant.pokemon.name.replace(/(^[a-z]+\-+)/g, '');
+    var nameVariantForm = nameVariant.charAt(0).toUpperCase() + nameVariant.slice(1);
+
+    $('.card-body .pokemon-variants').append('<div id="' + nameVariant + '" class="form-variant">' + nameVariantForm + '</div>');
+
+    $('#' + nameVariant + '').on('click', function () {
+        var urlVariantType = typeVariant.pokemon.url;
+        getUrl(urlVariantType);
+    });
 }
 
 var appendPokemon =
@@ -188,22 +205,9 @@ var appendPokemon =
             <div class="pokemon-type-form">\n\
                 <ul class="pokemon-type"></ul>\n\
             </div>\n\
+            <div class="pokemon-variants"></div>\n\
         </div>\n\
         <div class="pokemon-stats-base">\n\
             <h1>Base Stats</h1>\n\
         </div>\n\
     </div>';
-
-var appendButtomPokemonVariantForm =
-'';
-
-
-
-/* <div class="pokemon-variants">\n\
-                    <div class="mega">\n\
-                        <img src="assets/img/mega-evolution.png" alt="MegaEvolution">\n\
-                    </div>\n\
-                    <div class="gmax">\n\
-                        <img src="assets/img/gigantamax.png" alt="GigantaMax">\n\
-                    </div>\n\
-                </div>\n\ */
