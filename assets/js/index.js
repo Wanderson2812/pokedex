@@ -1,11 +1,13 @@
 function getUrl(url) {
     $.ajax({
-        url: url || "https://pokeapi.co/api/v2/pokemon/3",
-        success: function (req) {
-            createObject(req);
-            nextPrevious(req);
-            search();
-        }
+        type: 'GET',
+        url: url || "https://pokeapi.co/api/v2/pokemon/1"
+    }).done(function (req) {
+        createObject(req);
+        nextPrevious(req);
+        search();
+    }).fail(function (req) {
+        alert("Pokémon Not Found");
     });
 }
 getUrl();
@@ -25,16 +27,44 @@ function createObject(obj) {
 
 function appendCard(objPokemon) {
     $('.card-body.old-card').remove();
-    objPokemon.name = objPokemon.name.charAt(0).toUpperCase() + objPokemon.name.slice(1);
-
     $('section .content').append(appendPokemon);
 
     var $this = $('.card-body').attr('id', objPokemon.id);
     getInfo(objPokemon, $this);
 
+    if (objPokemon.name.split('-').length >= 2) {
+        var nameObj = objPokemon.name.split('-');
+        for (var i = 0; i < nameObj.length; i++) {
+            if (nameObj[i] == "mega") {
+                $('.image-background').show().addClass('background-mega');
+                $('body').css('background', 'linear-gradient(145deg, #f38ec6 0%, #1799ecCC 50%, #c5df41 100%)');
+            } else if (nameObj[i] == "gmax") {
+                $('.image-background').show().addClass('background-gmax');
+                $('body').css('background', 'linear-gradient(145deg, #19a7e8 0%, #ffffff 50%, #e6216d 100%)');
+            }
+            nameObj[i] = nameObj[i].charAt(0).toUpperCase() + nameObj[i].slice(1);
+        }
+        objPokemon.name = nameObj.join(' ')
+    } else {
+        $('.image-background').hide();
+        $('.alternative-forms').hide();
+        objPokemon.name = objPokemon.name.charAt(0).toUpperCase() + objPokemon.name.slice(1);
+    }
+
     $this.find('figure.pokemon-image img').attr('src', objPokemon.image).attr('alt', objPokemon.name);
     $this.find('.pokemon-info-top .pokemon-name-number h1').text(objPokemon.name);
     $this.find('.pokemon-info-top .pokemon-name-number h2').text("#" + objPokemon.id);
+
+    $('.alternative-form-buttons').hide();
+    $('.hide-alternative-form').on('click', function () {
+        if ($('.alternative-form-buttons').is(':visible')) {
+            $('.alternative-form-buttons').hide();
+            $('.hide-alternative-form').css('transform', 'rotate(90deg)');
+        } else {
+            $('.hide-alternative-form').css('transform', 'rotate(180deg)');
+            $('.alternative-form-buttons').show();
+        }
+    });
 }
 
 function getInfo(objPokemon, $this) {
@@ -150,6 +180,9 @@ function search() {
 
             $('.pokemon-search-image img').attr('src', 'assets/img/poke-lock.png');
             $inputSearch.val('').hide();
+            
+            $('.next').show();
+            $('.previous').show();
         });
     });
 }
@@ -159,11 +192,13 @@ function getVariantForm(obj) {
     var nameCurrent = obj.name;
 
     $.ajax({
-        url: urlSpecie,
-        success: function (req) {
-            var variant = req.varieties;
-            getUrlVariantForm(variant, nameCurrent);
-        }
+        type: 'GET',
+        url: urlSpecie
+    }).done(function (req) {
+        var variant = req.varieties;
+        getUrlVariantForm(variant, nameCurrent);
+    }).fail(function (req) {
+        alert("Not Pokémon Alternative Form Found");
     });
 }
 
@@ -175,7 +210,40 @@ function getUrlVariantForm(variant, nameCurrent) {
         if (nameCurrent == typeVariant.pokemon.name) {
             continue;
         } else {
+            $('.alternative-forms').show();
             selectVariantForm(typeVariant);
+        }
+    }
+
+    var qtdFormVariant = $('.card-body .pokemon-variants').children().length;
+    var windowWidth = $('section').innerWidth();
+
+    switch (qtdFormVariant) {
+        case 1: {
+            $('.pokemon-variants').css('grid-template-columns', '1fr');
+            break;
+        }
+        case 2: {
+            $('.pokemon-variants').css('grid-template-columns', '1fr 1fr');
+            break;
+        }
+        case 3: {
+            if (windowWidth >= 425) {
+                $('.pokemon-variants').css('grid-template-columns', '1fr 1fr 1fr');
+            } else {
+                $('.pokemon-variants').css('grid-template-columns', '1fr 1fr');
+            }
+            break;
+        }
+        default: {
+            if (windowWidth >= 768) {
+                $('.pokemon-variants').css('grid-template-columns', '1fr 1fr 1fr 1fr');
+            } else if (windowWidth >= 425) {
+                $('.pokemon-variants').css('grid-template-columns', '1fr 1fr 1fr');
+            } else {
+                $('.pokemon-variants').css('grid-template-columns', '1fr 1fr');
+            }
+            break;
         }
     }
 }
@@ -184,9 +252,16 @@ function selectVariantForm(typeVariant) {
     var nameVariant = typeVariant.pokemon.name.replace(/(^[a-z]+\-+)/g, '');
     var nameVariantForm = nameVariant.charAt(0).toUpperCase() + nameVariant.slice(1);
 
-    $('.card-body .pokemon-variants').append('<div id="' + nameVariant + '" class="form-variant">' + nameVariantForm + '</div>');
+    $('.card-body .pokemon-variants').append('<li id="' + nameVariant + '" class="form-variant">' + nameVariantForm + '</li>');
 
     $('#' + nameVariant + '').on('click', function () {
+        if (!typeVariant.is_default) {
+            $('.next').hide();
+            $('.previous').hide();
+        } else {
+            $('.next').show();
+            $('.previous').show();
+        }
         var urlVariantType = typeVariant.pokemon.url;
         getUrl(urlVariantType);
     });
@@ -194,20 +269,31 @@ function selectVariantForm(typeVariant) {
 
 var appendPokemon =
     '<div class="card-body">\n\
-        <div class="pokemon-info-top">\n\
-            <figure class="pokemon-image">\n\
-                <img/>\n\
-            </figure>\n\
-            <div class="pokemon-name-number">\n\
-                <h1 class="pokemon-name"></h1>\n\
-                <h2 class="pokemon-number"></h2>\n\
+        <div class="image-background"></div>\n\
+        <div class="info-background">\n\
+            <div class="pokemon-info-top">\n\
+                <figure class="pokemon-image">\n\
+                    <img/>\n\
+                </figure>\n\
+                <div class="pokemon-name-number">\n\
+                    <h1 class="pokemon-name"></h1>\n\
+                    <h2 class="pokemon-number"></h2>\n\
+                </div>\n\
+                <div class="pokemon-type-form">\n\
+                    <ul class="pokemon-type"></ul>\n\
+                </div>\n\
+                <div class="alternative-forms">\n\
+                    <div class="alternative-forms-image">\n\
+                        <h1>Alternative Forms</h1>\n\
+                        <img class="hide-alternative-form" src="assets/img/arrow-collapse.png" alt="Collapse ALternative Form" />\n\
+                    </div>\n\
+                    <div class="alternative-form-buttons">\n\
+                        <ul class="pokemon-variants"></ul>\n\
+                    </div>\n\
+                </div>\n\
             </div>\n\
-            <div class="pokemon-type-form">\n\
-                <ul class="pokemon-type"></ul>\n\
+            <div class="pokemon-stats-base">\n\
+                <h1>Base Stats</h1>\n\
             </div>\n\
-            <div class="pokemon-variants"></div>\n\
-        </div>\n\
-        <div class="pokemon-stats-base">\n\
-            <h1>Base Stats</h1>\n\
         </div>\n\
     </div>';
